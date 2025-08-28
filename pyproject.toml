@@ -1,0 +1,26 @@
+[build-system]
+requires = ["setuptools>=68", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "washiwrap"
+version = "0.1.0"
+description = "Generate Cricut-ready SVG decals for wrapping dice blanks with washi tape"
+readme = "README.md"
+requires-python = ">=3.10"
+license = {text = "MIT"}
+authors = [{name="Your Name"}]
+keywords = ["dice", "unfolding", "cricut", "svg", "washi", "polyhedron"]
+dependencies = [
+  "numpy>=1.24",
+  "networkx>=3.1",
+  "trimesh>=4.4.0",
+  "shapely>=2.0.1"
+]
+
+[project.scripts]
+washiwrap = "washiwrap.cli:main"
+
+[tool.pytest.ini_options]
+addopts = "-q"
+pythonpath = ["src"]
