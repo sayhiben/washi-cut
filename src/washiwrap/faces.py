@@ -38,7 +38,9 @@ def _order_loop_from_edges(edge_verts: np.ndarray) -> List[int]:
     while True:
         nbrs = neighbors[curr]
         if len(nbrs) != 2:
-            raise ValueError("Non-manifold boundary; expected degree-2 vertices for face loop")
+            raise ValueError(
+                f"Invalid face boundary topology: vertex has degree {len(nbrs)}, expected 2 for simple loop"
+            )
         nxt = nbrs[0] if nbrs[0] != prev else nbrs[1]
         if nxt == start:
             break

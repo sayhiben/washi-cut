@@ -62,16 +62,33 @@ def find_hamiltonian_ribbon(
     tape_width_mm: float,
     beam: int = 24,
     timeout_s: float = 2.0,
-    seed: int = 0
+    seed: int = 0,
+    overlap_tol: float = 1e-4,
 ) -> UnfoldResult:
     """
     Attempt to find a Hamiltonian path visiting each face once; placed as one ribbon.
     Backtracks on overlaps; uses a small beam to guide expansion by current coarse height.
+
+    Args:
+        faces: Facets to unfold.
+        adj: face adjacency list.
+        shared_edge: mapping of shared edges between faces.
+        tape_width_mm: maximum allowed strip height.
+        beam: beam width guiding the search.
+        timeout_s: soft time limit for the search.
+        seed: random seed for tie-breaking.
+        overlap_tol: allowed area overlap (mm^2) when placing a face; higher values permit small
+            numerical noise. Default 1e-4.
     """
     rng = np.random.default_rng(seed)
     face_lut = {f.fid: f for f in faces}
-    # Start at the highest-degree face to reduce branching
-    start = max(face_lut, key=lambda fid: len(adj.get(fid, [])))
+    # Ensure adjacency list contains all faces
+    adj = {fid: adj.get(fid, []) for fid in face_lut}
+    # Start at the highest-degree face with at least one neighbor
+    start_candidates = [fid for fid, nbs in adj.items() if nbs]
+    if not start_candidates:
+        raise NoHamiltonianPath("Mesh has no connected faces for Hamiltonian search")
+    start = max(start_candidates, key=lambda fid: len(adj[fid]))
     start_face = face_lut[start]
 
     # initial state: one polygon
@@ -110,7 +127,7 @@ def find_hamiltonian_ribbon(
                 new_union = unary_union([geom, child_poly])
                 # Overlap check: if union area < sum areas by more than epsilon; interiors overlapped
                 overlap = (geom.area + child_poly.area) - new_union.area
-                if overlap > 1e-4:
+                if overlap > overlap_tol:
                     continue
 
                 # Score by coarse min-height of union
